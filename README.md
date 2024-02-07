@@ -1,4 +1,4 @@
 # PogodiPogoda
-weather telegram bot
-This is going to be a pet bot, more or less useful only for me so far, while I'm learning and testing various bot options.
-As soon as it is useful for other people, this readme tells you so.
+weather telegram bot @pogodipogoda_bot
+
+This is a pet bot, mostly sleeping and growing as all babies do. If you're willing to chat with the bot, please call his mummy first (@EssentialMarie).
