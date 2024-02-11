@@ -15,45 +15,41 @@ name = None
 currency = CurrencyConverter()
 amount = 0
 
-@bot.message_handler(commands = ['start'])
+@bot.message_handler(commands = ['start','main', 'help'])
 def start(message):
+    print(f'start called with message{message}')
     markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
     btn1 = types.KeyboardButton('Currency Calc')
     markup.row(btn1)
     btn2 = types.KeyboardButton('Weather Today')
     markup.row(btn2)
-    file = open('./photo.jpg', 'rb')
+    file = open('./Start Photo.png', 'rb')
     bot.send_photo(message.chat.id, file, reply_markup=markup)
     bot.send_message(message.chat.id, f"Hello, {message.from_user.first_name} {message.from_user.last_name} 💋. \n"
                                       f"I'm PogodiPogoda Bot. Choose a button or just talk to me.",
                      reply_markup=markup)
-#    bot.register_next_step_handler(message, where_to_go)
+
 @bot.message_handler(content_types = ['text'])
 def where_to_go(message):
+    print(f'where_to_go called with message{message}')
     if message.text == 'Currency Calc':
         bot.register_next_step_handler(message, converter)
     elif message.text == 'Weather Today':
         bot.register_next_step_handler(message, city)
-
-def city(message):
-    markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
-    btn1 = types.KeyboardButton('Moscow')
-    btn2 = types.KeyboardButton('Saint+Petersburg')
-    markup.row(btn1, btn2)
-    btn3 = types.KeyboardButton('Nizhny+Novgorod')
-    btn4 = types.KeyboardButton('Another city')
-    markup.row(btn3, btn4)
-    bot.send_message(message.chat.id, f"Hi, {message.from_user.first_name} {message.from_user.last_name} 💋. \n"
-                                      f"Choose a city, please.", reply_markup=markup)
-    bot.register_next_step_handler(message, get_weather)
-
-@bot.message_handler(content_types=['text'])
-def get_weather(message):
-    city = message.text.strip().lower()
-    res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API}&units=metric')
-    data = json.loads(res.text)
-    bot.reply_to(message, f'The temperature is {data["main"]["temp"]} C')
-    bot.register_next_step_handler(message, start)
+    else:
+#        bot.reply_to(message, "Let me think")
+        if message.text.lower() in ['site', 'website']:
+            webbrowser.open('https://www.gismeteo.ru/')
+        if message.text.lower() in ['hello', 'hi']:
+            bot.send_message(message.chat.id,
+                             f'Hi there, {message.from_user.first_name}  {message.from_user.last_name}')
+        if message.text.lower() == 'why?':
+            bot.send_message(message.chat.id, "<b><u>Nature</u></b> <em>did it.</em>", parse_mode='html')
+        if message.text.lower() == 'id':
+            bot.reply_to(message, f'ID: {message.from_user.id}')
+        else:
+            bot.send_message(message.chat.id, "I've nothing to say on it.")
+            bot.register_next_step_handler(message, start)
 
 # # the following code requests users' data and collects it in a simple table  in sqlite3
 # but we don't need it for the time being
@@ -112,26 +108,40 @@ def get_weather(message):
 #     elif message.text == 'Delete photo':
 #         bot.send_message(message.chat.id, 'Delete')
 
-@bot.message_handler(commands=['site', 'website'])
-def site(message):
-    webbrowser.open('https://www.gismeteo.ru/')
+def city(message):
+    print(f'city called with message{message}')
+    markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
+    btn1 = types.KeyboardButton('Moscow')
+    btn2 = types.KeyboardButton('Saint Petersburg')
+    markup.row(btn1, btn2)
+    btn3 = types.KeyboardButton('Nizhny Novgorod')
+    markup.row(btn3)
+    bot.send_message(message.chat.id, f"Hi, {message.from_user.first_name} {message.from_user.last_name} 💋. \n"
+                                      f"Choose a city, please, or write a city name.", reply_markup=markup)
+    bot.register_next_step_handler(message, get_weather)
 
-@bot.message_handler(commands=['main', 'hello'])
-def main(message):
-    bot.send_message(message.chat.id, f'Hi there, {message.from_user.first_name}  {message.from_user.last_name}')
+def get_weather(message):
+    print(f'get_weather called with message{message}')
+    city = message.text.strip().lower().replace(" ","+")
+    res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API}&units=metric')
+    if res.status_code == 200:
+        data = json.loads(res.text)
+        temp = data["main"]["temp"]
+        bot.reply_to(message, f'The temperature is {temp} C')
+        image = 'snow.png' if temp > 5.0 else 'Sun.png'
+        file = open('./' + image, 'rb')
+        bot.send_photo(message.chat.id, file)
+        bot.register_next_step_handler(message, start)
+    else:
+        bot.reply_to(message, 'Wrong city name')
+        bot.register_next_step_handler(message, start)
+    return
 
 
-@bot.message_handler(commands=['why?'])
-def main(message):
-    bot.send_message(message.chat.id, "<b><u>Nature</u></b> <em>did it.</em>", parse_mode='html')
-#
-#
 # @bot.message_handler()
 # def info(message):
-#     if message.text.lower() == 'hi':
-#         bot.send_message(message.chat.id, f'Hi there, {message.from_user.first_name}  {message.from_user.last_name}')
 #     elif message.text.lower() == 'id':
-#         bot.reply_to(message, f'ID: {message.from_user.id}')
+#
 #
 
 @bot.message_handler(commands=['convert'])
