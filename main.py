@@ -15,7 +15,7 @@ name = None
 currency = CurrencyConverter()
 amount = 0
 
-@bot.message_handler(commands = ['start','main', 'help'])
+@bot.message_handler(commands = ['start','main'])
 def start(message):
     print(f'start called with message{message}')
     markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
@@ -28,6 +28,17 @@ def start(message):
     bot.send_message(message.chat.id, f"Hello, {message.from_user.first_name} {message.from_user.last_name} 💋. \n"
                                       f"I'm PogodiPogoda Bot. Choose a button or just talk to me.",
                      reply_markup=markup)
+
+def start2(message):
+    markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
+    btn1 = types.KeyboardButton('Currency Calc')
+    markup.row(btn1)
+    btn2 = types.KeyboardButton('Weather Today')
+    markup.row(btn2)
+    bot.send_message(message.chat.id, f"Hi again, {message.from_user.first_name} {message.from_user.last_name}. \n"
+                                      f"I'm ready to continue. Choose a button or just talk to me.",
+                     reply_markup=markup)
+
 
 @bot.message_handler(content_types = ['text'])
 def where_to_go(message):
@@ -49,7 +60,7 @@ def where_to_go(message):
             bot.reply_to(message, f'ID: {message.from_user.id}')
         else:
             bot.send_message(message.chat.id, "I've nothing to say on it.")
-            bot.register_next_step_handler(message, start)
+            bot.register_next_step_handler(message, start2)
 
 # # the following code requests users' data and collects it in a simple table  in sqlite3
 # but we don't need it for the time being
@@ -131,10 +142,10 @@ def get_weather(message):
         image = 'snow.png' if temp > 5.0 else 'Sun.png'
         file = open('./' + image, 'rb')
         bot.send_photo(message.chat.id, file)
-        bot.register_next_step_handler(message, start)
+        bot.register_next_step_handler(message, start2)
     else:
         bot.reply_to(message, 'Wrong city name')
-        bot.register_next_step_handler(message, start)
+        bot.register_next_step_handler(message, start2)
     return
 
 
@@ -155,7 +166,7 @@ def summa(message):
         amount = float(message.text.strip())
     except ValueError:
         bot.send_message(message.chat.id, 'A number is expected, try again.')
-        bot.register_next_step_handler(message, start)
+        bot.register_next_step_handler(message, start2)
         return
     if amount > 0:
         markup = types.InlineKeyboardMarkup(row_width=2)
