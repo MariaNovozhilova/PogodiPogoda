@@ -9,7 +9,7 @@ from currency_converter import CurrencyConverter
 from telebot import types
 
 bot = telebot.TeleBot(os.environ['TOKEN'])
-
+print("i'm alive")
 API = '93cdfa267726526d19684572cb317783' #API from https://home.openweathermap.org/api_keys '3d9de74844d28377e81415151cbe6a66'
 name = None
 currency = CurrencyConverter()
