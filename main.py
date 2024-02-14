@@ -5,11 +5,13 @@ import telebot
 import requests
 import json
 from currency_converter import CurrencyConverter
+import datetime
+
 
 from telebot import types
 
 bot = telebot.TeleBot(os.environ['TOKEN'])
-print("i'm alive")
+
 API = '93cdfa267726526d19684572cb317783' #API from https://home.openweathermap.org/api_keys '3d9de74844d28377e81415151cbe6a66'
 name = None
 currency = CurrencyConverter()
@@ -17,7 +19,9 @@ amount = 0
 
 @bot.message_handler(commands = ['start','main'])
 def start(message):
-    print(f'start called with message{message}')
+    print(f'start called by {message.from_user.first_name}')
+    now = datetime.datetime.now().hour
+    print(now)
     markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
     btn1 = types.KeyboardButton('Currency Calc')
     markup.row(btn1)
@@ -25,9 +29,17 @@ def start(message):
     markup.row(btn2)
     file = open('./Start Photo.png', 'rb')
     bot.send_photo(message.chat.id, file, reply_markup=markup)
-    bot.send_message(message.chat.id, f"Hello, {message.from_user.first_name} {message.from_user.last_name} 💋. \n"
-                                      f"I'm PogodiPogoda Bot. Choose a button or just talk to me.",
-                     reply_markup=markup)
+    if now >= 0 and now < 4: # depending on the current time, the bot chooses a greeting 
+        bot.send_message(message.chat.id,
+                         f"Good night, {message.from_user.first_name} {message.from_user.last_name} 💋. \n")
+    elif (4 <= now <= 11):
+        bot.send_message(message.chat.id, f"Good morning, {message.from_user.first_name} {message.from_user.last_name} 💋. \n")
+    elif 11 < now < 17:
+        bot.send_message(message.chat.id,f"Good afternoon, {message.from_user.first_name} {message.from_user.last_name} 💋. \n")
+    elif 17 <= now: bot.send_message(message.chat.id,
+                             f"Good night, {message.from_user.first_name} {message.from_user.last_name} 💋. \n")
+
+    bot.send_message(message.chat.id, f"I'm PogodiPogoda Bot. Choose a button or just talk to me.", reply_markup=markup)
 
 def start2(message):
     markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
@@ -42,7 +54,9 @@ def start2(message):
 
 @bot.message_handler(content_types = ['text'])
 def where_to_go(message):
-    print(f'where_to_go called with message{message}')
+    print(f'where_to_go called by {message.from_user.first_name}')
+    nowdate = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+    print(nowdate)
     if message.text == 'Currency Calc':
         bot.register_next_step_handler(message, converter)
     elif message.text == 'Weather Today':
@@ -120,7 +134,7 @@ def where_to_go(message):
 #         bot.send_message(message.chat.id, 'Delete')
 
 def city(message):
-    print(f'city called with message{message}')
+    print(f'city called by {message.from_user.first_name}')
     markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
     btn1 = types.KeyboardButton('Moscow')
     btn2 = types.KeyboardButton('Saint Petersburg')
@@ -132,7 +146,7 @@ def city(message):
     bot.register_next_step_handler(message, get_weather)
 
 def get_weather(message):
-    print(f'get_weather called with message{message}')
+    print(f'get_weather called by {message.from_user.first_name}')
     city = message.text.strip().lower().replace(" ","+")
     res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API}&units=metric')
     if res.status_code == 200:
