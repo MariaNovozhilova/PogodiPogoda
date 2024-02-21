@@ -24,12 +24,13 @@ def start(message):
     print(now)
     markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
     btn1 = types.KeyboardButton('Currency Calc')
-    markup.row(btn1)
     btn2 = types.KeyboardButton('Weather Today')
-    markup.row(btn2)
+    markup.row(btn1, btn2)
+    btn3 = types.KeyboardButton('Chat on everything')
+    markup.row(btn3)
     file = open('./Start Photo.png', 'rb')
     bot.send_photo(message.chat.id, file, reply_markup=markup)
-    if now >= 0 and now < 4: # depending on the current time, the bot chooses a greeting 
+    if now >= 0 and now < 4: # depending on the current time, the bot chooses a greeting
         bot.send_message(message.chat.id,
                          f"Good night, {message.from_user.first_name} {message.from_user.last_name} 💋. \n")
     elif (4 <= now <= 11):
@@ -40,23 +41,29 @@ def start(message):
                              f"Good night, {message.from_user.first_name} {message.from_user.last_name} 💋. \n")
 
     bot.send_message(message.chat.id, f"I'm PogodiPogoda Bot. Choose a button or just talk to me.", reply_markup=markup)
+    bot.register_next_step_handler(message, where_to_go)
 
+@bot.message_handler(content_types='text')
 def start2(message):
     markup = types.ReplyKeyboardMarkup()  # этот код сразу на старте предлагает кнопки, здоровается и высылает картинку
     btn1 = types.KeyboardButton('Currency Calc')
-    markup.row(btn1)
     btn2 = types.KeyboardButton('Weather Today')
-    markup.row(btn2)
+    markup.row(btn1, btn2)
+    btn3 = types.KeyboardButton('Chat about everything')
+    markup.row(btn3)
     bot.send_message(message.chat.id, f"Hi again, {message.from_user.first_name} {message.from_user.last_name}. \n"
                                       f"I'm ready to continue. Choose a button or just talk to me.",
                      reply_markup=markup)
+    bot.register_next_step_handler(message, where_to_go)
 
-
-@bot.message_handler(content_types = ['text'])
 def where_to_go(message):
     print(f'where_to_go called by {message.from_user.first_name}')
     nowdate = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
     print(nowdate)
+    question = message.text.lower()
+    print(question)
+    print(type(question))
+
     if message.text == 'Currency Calc':
        converter(message)
     elif message.text == 'Weather Today':
@@ -65,66 +72,78 @@ def where_to_go(message):
 #        bot.reply_to(message, "Let me think")
         if message.text.lower() in ['site', 'website']:
             webbrowser.open('https://www.gismeteo.ru/')
-        if message.text.lower() in ['hello', 'hi']:
+        elif message.text.lower() in ['hello', 'hi']:
             bot.send_message(message.chat.id,
                              f'Hi there, {message.from_user.first_name}  {message.from_user.last_name}')
-        if message.text.lower() == 'why?':
+        elif 'why' in question.split():
             bot.send_message(message.chat.id, "<b><u>Nature</u></b> <em>did it.</em>", parse_mode='html')
-        if message.text.lower() == 'id':
+        elif message.text.lower() == 'id':
             bot.reply_to(message, f'ID: {message.from_user.id}')
         else:
-            bot.send_message(message.chat.id, "I've nothing to say on it.")
-            bot.register_next_step_handler(message, start2)
+            bot.send_message(message.chat.id, "I have nothing to say.")
+        bot.send_message(message.chat.id, "If you want to know more, please register.")
+        bot.register_next_step_handler(message, registration)
 
 # # the following code requests users' data and collects it in a simple table  in sqlite3
 # but we don't need it for the time being
-#     conn = sqlite3.connect('pogodipogoda.sql')
-#     cur = conn.cursor()
-#
-#     cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, name varchar(50), pass varchar(50))')
-#     conn.commit()
-#     conn.close()
 
-    # bot.send_message(message.chat.id, "Hello, you're going to be registered. Please, enter your name.")
-    # bot.register_next_step_handler(message, user_name)
+conn = sqlite3.connect('pogodipogoda.sql')
+cur = conn.cursor()
 
-# def user_name(message):
-#     global name
-#     name = message.text.strip()
-#     bot.send_message(message.chat.id, "Hello, you're going to be registered. Please, enter your password.")
-#     bot.register_next_step_handler(message, user_pass)
-#
+cur.execute('CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key, name varchar(50), pass varchar(50))')
+conn.commit()
+conn.close()
+
+def registration(message):
+    bot.send_message(message.chat.id, "Hello, you're going to be registered. Please, enter your name.")
+    bot.register_next_step_handler(message, user_name)
+
+def user_name(message):
+     global name
+     name = message.text.strip()
+     conn = sqlite3.connect('pogodipogoda.sql')
+     cur = conn.cursor()
+     cur.execute(
+               "INSERT INTO users (name) VALUES ('%s')" % (name))
+     conn.commit()
+     cur.close()
+     conn.close()
+     bot.send_message(message.chat.id, "Thank you for registration. "
+                                       "I want to tell you who has also registered")
+     bot.register_next_step_handler(message, userlist)
+     bot.register_next_step_handler(message, start2)
+
 # def user_pass(message):
-#     password = message.text.strip()
+#      password = message.text.strip()
 #
-#     conn = sqlite3.connect('pogodipogoda.sql')
-#     cur = conn.cursor()
+#      conn = sqlite3.connect('pogodipogoda.sql')
+#      cur = conn.cursor()
 #
-#     cur.execute(
-#         "INSERT INTO users (name, pass) VALUES ('%s', '%s')" % (name, password))
-#     conn.commit()
-#     cur.close()
-#     conn.close()
+#      cur.execute(
+#          "INSERT INTO users (name, pass) VALUES ('%s', '%s')" % (name, password))
+#      conn.commit()
+#      cur.close()
+#      conn.close()
 
-    # markup = types.InlineKeyboardMarkup()
+   # markup = types.InlineKeyboardMarkup()
     # markup.add(types.InlineKeyboardButton('Users list', callback_data='users'))
     # bot.send_message(message.chat.id, "The user has been registered.", reply_markup=markup)
 
 # @bot.callback_query_handler(func=lambda call:True) # here we retrieve the users list from the db and show it
-# def callback(call):
-#     conn = sqlite3.connect('pogodipogoda.sql')
-#     cur = conn.cursor()
-#
-#     cur.execute("SELECT * FROM users")
-#     users = cur.fetchall() # returns all records found
-#
-#     info = ''
-#     for el in users:
-#         info += f'Name: {el[1]}, pass: {el[2]}\n'
-#     cur.close()
-#     conn.close()
-#
-#     bot.send_message(call.message.chat.id, info)
+def userlist(message):
+    conn = sqlite3.connect('pogodipogoda.sql')
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM users")
+    users = cur.fetchall() # returns all records found
+
+    info = ''
+    for el in users:
+        info += f'Name: {el[1]}, pass: {el[2]}\n'
+    cur.close()
+    conn.close()
+
+    bot.send_message(message.chat.id, info)
 
 
 # def on_click(message):
