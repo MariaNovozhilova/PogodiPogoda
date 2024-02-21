@@ -58,9 +58,9 @@ def where_to_go(message):
     nowdate = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
     print(nowdate)
     if message.text == 'Currency Calc':
-        bot.register_next_step_handler(message, converter)
+       converter(message)
     elif message.text == 'Weather Today':
-        bot.register_next_step_handler(message, city)
+        city(message)
     else:
 #        bot.reply_to(message, "Let me think")
         if message.text.lower() in ['site', 'website']:
